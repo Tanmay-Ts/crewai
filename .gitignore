@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+
+# Environment
+.env
+
+# Database
+analysis.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Outputs (optional large files)
+data/*.pdf
+outputs/

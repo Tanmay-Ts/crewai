@@ -1,0 +1,35 @@
+# Core AI stack
+crewai
+crewai-tools
+litellm
+openai
+
+# FastAPI backend
+fastapi
+uvicorn
+starlette
+pydantic
+
+# LangChain ecosystem
+langchain-core
+
+# Data & document processing
+numpy
+pandas
+pillow
+openpyxl
+pdfplumber
+jsonschema
+Jinja2
+
+# Tokenization / embeddings
+tiktoken
+onnxruntime
+
+# Utilities
+python-dotenv
+requests
+oauthlib
+celery
+redis
+sqlalchemy
