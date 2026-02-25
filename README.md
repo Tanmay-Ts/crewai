@@ -2,59 +2,61 @@
 
 ## 📌 Project Background
 
-This repository was provided as part of a debugging challenge.
-The original CrewAI-based financial document analyzer contained multiple deterministic bugs and architectural issues that prevented reliable execution.
+This repository was provided as part of the CrewAI debugging challenge.
+The original financial document analyzer contained multiple deterministic bugs, dependency conflicts, and architectural issues that prevented reliable execution.
 
-My task was to:
+### 🎯 Objective
+
+The task was to:
 
 * Fix all deterministic bugs
 * Improve inefficient prompts
-* Make the system fully runnable
-* (Bonus) Add queue worker support
-* (Bonus) Add database integration
+* Make the system fully runnable end-to-end
+* (Bonus) Add a queue worker model for concurrency
+* (Bonus) Add database persistence
 
-This submission delivers a **fully working, production-ready system**.
+This submission delivers a **fully functional, stable, and production-ready system**.
 
 ---
 
 # 🚀 Final System Capabilities
 
-The system now:
+The upgraded system now:
 
-✅ Accepts financial PDF uploads
-✅ Processes documents using CrewAI agents
-✅ Generates structured financial insights
-✅ Runs analysis asynchronously via Celery
-✅ Supports concurrent requests
-✅ Stores results in SQLite database
-✅ Uses modern OpenAI Responses API
-✅ Works reliably on Windows
+* ✅ Accepts financial PDF uploads
+* ✅ Processes documents using CrewAI agents
+* ✅ Generates structured financial insights
+* ✅ Runs analysis asynchronously via Celery
+* ✅ Supports concurrent request handling
+* ✅ Persists results in SQLite database
+* ✅ Uses modern OpenAI Responses API
+* ✅ Works reliably on Windows
 
 ---
 
-# 🐛 Deterministic Bugs Found & Fixed
+# 🐛 Deterministic Bugs Found & Fixes Applied
 
-Below is the complete audit of issues discovered in the **original provided codebase**.
+Below is a complete audit of issues discovered in the **original provided codebase** and how they were resolved.
 
 ---
 
 ## 1️⃣ Python Version Incompatibility
 
-### ❌ Issue (in provided code)
+### ❌ Issue
 
-The environment was running on Python 3.14, which caused multiple dependency failures because key libraries (CrewAI, FastAPI, Celery) are not yet fully stable on Python 3.14.
+The project environment was running on **Python 3.14**, which caused multiple dependency failures because key libraries (CrewAI, FastAPI, Celery) are not yet fully stable on Python 3.14.
 
 ### ✅ Fix
 
-* Downgraded to **Python 3.12**
+* Downgraded runtime to **Python 3.12**
 * Recreated virtual environment
-* Verified compatibility across stack
+* Verified compatibility across the stack
 
 ---
 
-## 2️⃣ requirements.txt Dependency Conflicts
+## 2️⃣ requirements.txt Dependency Conflicts (Critical Blocker)
 
-### ❌ Issue (major blocker)
+### ❌ Issue
 
 The provided `requirements.txt` contained strict version pins such as:
 
@@ -63,16 +65,18 @@ The provided `requirements.txt` contained strict version pins such as:
 * `langsmith==...`
 * `opentelemetry-api==...`
 
-This caused repeated **ResolutionImpossible** errors because:
+This produced repeated **ResolutionImpossible** errors because:
 
 * CrewAI required newer OpenTelemetry
 * LiteLLM required newer OpenAI
 * LangChain required newer LangSmith
-* Pip resolver could not satisfy all constraints
+* pip resolver could not satisfy all constraints
 
-### ✅ Fix (critical change)
+---
 
-👉 Removed version pins and kept **only package names**
+### ✅ Fix (Important Design Decision)
+
+👉 Removed version pins and kept **only dependency names**.
 
 Example:
 
@@ -83,11 +87,11 @@ Example:
 
 ### ✅ Why this was necessary
 
-* Allows pip to resolve compatible versions
-* Eliminates dependency conflicts
-* Makes project installable across environments
+* Allows pip to resolve mutually compatible versions
+* Eliminates dependency deadlocks
+* Makes the project installable across environments
 
-⚠️ This change was required to make the system runnable.
+⚠️ This change was essential to make the system runnable.
 
 ---
 
@@ -95,7 +99,7 @@ Example:
 
 ### ❌ Issue
 
-Agents were initialized with raw functions instead of CrewAI tools, causing:
+Agents were initialized with raw functions instead of CrewAI tool objects, causing:
 
 ```
 ValidationError: tools.0 Input should be a valid dictionary or instance of BaseTool
@@ -103,8 +107,9 @@ ValidationError: tools.0 Input should be a valid dictionary or instance of BaseT
 
 ### ✅ Fix
 
-* Properly wrapped tools according to CrewAI expectations
+* Properly wrapped tools according to CrewAI requirements
 * Ensured agents receive valid tool instances
+* Verified successful agent initialization
 
 ---
 
@@ -112,7 +117,7 @@ ValidationError: tools.0 Input should be a valid dictionary or instance of BaseT
 
 ### ❌ Issue
 
-Original code used relative imports like:
+Original code used relative imports:
 
 ```python
 from .task import ...
@@ -138,17 +143,19 @@ Converted to absolute imports:
 from task import ...
 ```
 
+This allows direct script execution.
+
 ---
 
-## 5️⃣ OpenAI SDK Usage Outdated
+## 5️⃣ Outdated OpenAI SDK Usage
 
 ### ❌ Issue
 
-Original implementation used inconsistent or outdated OpenAI patterns.
+The original implementation used inconsistent and partially outdated OpenAI patterns.
 
 ### ✅ Fix
 
-Standardized **all LLM calls** to modern OpenAI Responses API:
+Standardized **all LLM calls** to the modern OpenAI Responses API:
 
 ```python
 from openai import OpenAI
@@ -161,11 +168,12 @@ response = client.responses.create(
 )
 ```
 
-Benefits:
+### ✅ Benefits
 
 * Future-proof
-* Consistent
+* Consistent usage
 * Matches official SDK
+* Easier maintenance
 
 ---
 
@@ -173,13 +181,13 @@ Benefits:
 
 ### ❌ Issue
 
-FastAPI was not detected due to environment mismatch.
+FastAPI imports failed due to environment mismatch and improper installation context.
 
 ### ✅ Fix
 
 * Rebuilt virtual environment
 * Installed dependencies inside active venv
-* Verified interpreter paths
+* Verified interpreter path consistency
 
 ---
 
@@ -195,9 +203,9 @@ ModuleNotFoundError: No module named 'celery'
 
 ### ✅ Fix
 
-* Installed Celery properly
+* Installed Celery in the virtual environment
 * Added to requirements
-* Verified worker boot
+* Verified worker startup
 
 ---
 
@@ -205,7 +213,7 @@ ModuleNotFoundError: No module named 'celery'
 
 ### ❌ Issue
 
-Celery could not connect to Redis broker.
+Celery could not connect to the Redis broker.
 
 ### ✅ Fix
 
@@ -225,22 +233,22 @@ Status endpoint crashed with:
 AttributeError: 'DisabledBackend' object
 ```
 
-Root cause: Celery result backend not configured.
+**Root cause:** Celery result backend was not configured.
 
 ### ✅ Fix
 
-Configured Celery with Redis backend:
+Configured Celery correctly:
 
 ```python
-broker="redis://localhost:6379/0"
-backend="redis://localhost:6379/0"
+broker = "redis://localhost:6379/0"
+backend = "redis://localhost:6379/0"
 ```
 
-Now:
+### ✅ Result
 
 * Task status works
 * Results are retrievable
-* Polling endpoint is functional
+* Polling endpoint functions correctly
 
 ---
 
@@ -248,7 +256,7 @@ Now:
 
 ### ❌ Issue
 
-On Windows, default prefork pool caused stuck or unprocessed tasks.
+On Windows, the default prefork pool caused stuck or unprocessed tasks.
 
 ### ✅ Fix
 
@@ -266,28 +274,28 @@ celery -A celery_app.celery_app worker --pool=solo --loglevel=info
 
 API returned `processing` indefinitely.
 
-### Root Cause
+### 🔍 Root Cause
 
-Worker was not properly consuming tasks.
+Worker was not properly consuming registered tasks.
 
 ### ✅ Fix
 
 * Correct Celery wiring
-* Proper task registration
-* Verified worker consumption
+* Proper task decoration
+* Verified worker logs
 * Confirmed successful completion
 
 ---
 
 # ⚡ Prompt Improvements
 
-The original prompts were inefficient and vague.
+The original prompts were vague and inefficient.
 
 ### Improvements made
 
-* Clear financial metric extraction
-* Structured output expectations
-* Better verification logic
+* Structured financial metric extraction
+* Clear output expectations
+* Stronger verification instructions
 * Reduced hallucination risk
 * Improved reasoning clarity
 
@@ -315,7 +323,7 @@ SQLite Database
 
 ---
 
-# 🧪 Setup Instructions
+# 🧪 Setup & Usage Instructions
 
 ## 1️⃣ Create virtual environment
 
@@ -359,25 +367,34 @@ http://localhost:8000/docs
 
 ---
 
-# 📡 API Endpoints
+# 📡 API Documentation
 
-## POST /analyze
+## 🔹 POST /analyze
 
-Upload financial document.
+Upload a financial document for asynchronous analysis.
 
-**Response**
+### Request
+
+* Content-Type: `multipart/form-data`
+* Field: `file` (PDF)
+
+### Response
 
 ```json
 {
   "status": "processing",
-  "task_id": "...",
-  "file_path": "..."
+  "task_id": "uuid",
+  "file_path": "data/xxxx.pdf"
 }
 ```
 
 ---
 
-## GET /status/{task_id}
+## 🔹 GET /status/{task_id}
+
+Check background task status.
+
+### Possible Responses
 
 **Pending**
 
@@ -392,7 +409,16 @@ Upload financial document.
 ```json
 {
   "status": "completed",
-  "result": "..."
+  "result": "Full financial analysis..."
+}
+```
+
+**Failed**
+
+```json
+{
+  "status": "failed",
+  "error": "Error message"
 }
 ```
 
@@ -410,7 +436,7 @@ Stores:
 
 * task_id
 * file_path
-* analysis
+* analysis result
 * status
 
 ---
@@ -439,12 +465,11 @@ Stores:
 The originally provided CrewAI financial analyzer has been:
 
 * Fully debugged
+* Dependency-stabilized
 * Made production-ready
-* Scaled with async processing
+* Scaled with asynchronous processing
 * Stabilized for Windows
 * Modernized with OpenAI Responses API
 
-The system is now reliable, extensible, and ready for real-world workloads.
-
----
+The system is now reliable, extensible, and suitable for real-world workloads.
 
